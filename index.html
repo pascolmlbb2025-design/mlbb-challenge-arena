@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLBB Challenge Arena</title>
+<style>
+:root{
+ --bg:#081120;--card:#132238;--accent:#f5c242;--text:#ffffff;--muted:#b8c4d6;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Segoe UI,Arial,sans-serif;
+ background:linear-gradient(180deg,#081120,#102947);
+ color:var(--text);
+ min-height:100vh;
+}
+.container{max-width:1100px;margin:auto;padding:16px}
+.screen{display:none;animation:fade .4s}
+.active{display:block}
+.card{
+ background:rgba(19,34,56,.95);
+ border-radius:20px;padding:20px;
+ box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.center{text-align:center}
+button{
+ background:var(--accent);color:#000;border:none;border-radius:12px;
+ padding:14px 18px;font-weight:700;cursor:pointer;min-height:50px
+}
+button:hover{transform:translateY(-1px)}
+.option,.match-item{width:100%;margin:10px 0}
+.option{
+ background:#223b5d;color:#fff;text-align:left
+}
+.hero{
+ width:100%;max-width:260px;aspect-ratio:1/1;object-fit:cover;border-radius:16px
+}
+input{
+ width:100%;max-width:350px;padding:14px;border-radius:12px;border:none
+}
+.grid{display:grid;gap:12px}
+.progress{
+ display:flex;justify-content:space-between;align-items:center;
+ margin-bottom:12px;color:var(--muted)
+}
+.badge{
+ background:#203654;padding:8px 12px;border-radius:999px
+}
+.match-item{
+ background:#28456d;color:#fff;padding:16px;border-radius:12px;text-align:center
+}
+.selected{outline:3px solid var(--accent)}
+#pieces{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:320px;margin:auto}
+.piece{font-size:1.8rem;padding:24px}
+footer{margin-top:20px;text-align:center;color:var(--muted);font-size:.9rem}
+
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Smartphone */
+@media (max-width:767px){
+ h1{font-size:1.9rem}
+ .grid{grid-template-columns:1fr}
+ button{width:100%}
+}
+
+/* Tablet */
+@media (min-width:768px) and (max-width:1023px){
+ .grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* PC */
+@media (min-width:1024px){
+ .grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<section id="start" class="screen active">
+<div class="card center">
+<h1>⚔️ MLBB Challenge Arena</h1>
+<p>Uji pengetahuanmu tentang Mobile Legends melalui 4 tantangan.</p>
+<p class="badge">Skor Maksimal: 50 Poin</p>
+<ol style="text-align:left;display:inline-block">
+<li>Tebak Gambar Hero</li>
+<li>Kuis Pengetahuan</li>
+<li>Puzzle Urutan</li>
+<li>Cocokkan Hero & Role</li>
+</ol><br><br>
+<button onclick="showScreen('guess')">Mulai Bermain</button>
+</div>
+</section>
+
+<section id="guess" class="screen">
+<div class="card center">
+<div class="progress"><span>Level 1/4</span><span id="scoreTop">0 Poin</span></div>
+<h2>Tebak Gambar Hero</h2>
+<img class="hero" src="https://placehold.co/400x400/1b263b/ffffff?text=Miya" alt="Hero">
+<p>Siapakah hero ini?</p>
+<input id="guessInput" placeholder="Ketik nama hero">
+<br><br>
+<button onclick="checkGuess()">Kirim Jawaban</button>
+<p id="guessMsg"></p>
+</div>
+</section>
+
+<section id="quiz" class="screen">
+<div class="card">
+<div class="progress"><span>Level 2/4</span><span id="scoreTop2">0 Poin</span></div>
+<h2>Kuis MLBB</h2>
+<p id="question"></p>
+<div id="answers"></div>
+</div>
+</section>
+
+<section id="puzzle" class="screen">
+<div class="card center">
+<div class="progress"><span>Level 3/4</span><span id="scoreTop3">0 Poin</span></div>
+<h2>Puzzle Urutan</h2>
+<p>Klik angka secara berurutan dari 1 sampai 4.</p>
+<div id="pieces"></div>
+<p id="puzzleMsg"></p>
+</div>
+</section>
+
+<section id="match" class="screen">
+<div class="card">
+<div class="progress"><span>Level 4/4</span><span id="scoreTop4">0 Poin</span></div>
+<h2>Cocokkan Hero dan Role</h2>
+<p>Pilih hero, lalu pilih role yang tepat.</p>
+<div class="grid" id="matchGrid"></div>
+<p id="matchMsg"></p>
+</div>
+</section>
+
+<section id="end" class="screen">
+<div class="card center">
+<h1>🏆 Permainan Selesai</h1>
+<h2 id="finalScore"></h2>
+<p id="rank"></p>
+<button onclick="location.reload()">Main Lagi</button>
+</div>
+</section>
+
+<footer>Responsif untuk smartphone, tablet, dan PC</footer>
+</div>
+
+<script>
+let score=0;
+
+function updateScore(){
+["scoreTop","scoreTop2","scoreTop3","scoreTop4"].forEach(id=>{
+ let el=document.getElementById(id);
+ if(el) el.innerText=score+" Poin";
+});
+}
+
+function showScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+updateScore();
+}
+
+function checkGuess(){
+const val=document.getElementById("guessInput").value.trim().toLowerCase();
+if(val==="miya"){
+score+=10; updateScore();
+document.getElementById("guessMsg").innerHTML="✅ Benar! +10 poin";
+setTimeout(()=>{showScreen("quiz");loadQuiz();},1000);
+}else{
+document.getElementById("guessMsg").innerHTML="❌ Coba lagi.";
+}
+}
+
+const quiz=[
+{q:"Berapa jumlah pemain dalam satu tim?",a:["3","4","5","6"],c:2},
+{q:"Role utama Tigreal adalah ...",a:["Tank","Mage","Support","Assassin"],c:0},
+{q:"Lord pertama muncul pada menit ke ...",a:["6","8","10","12"],c:1}
+];
+let q=0;
+
+function loadQuiz(){
+document.getElementById("question").innerText=quiz[q].q;
+let html="";
+quiz[q].a.forEach((x,i)=>{
+html+=`<button class="option" onclick="answer(${i})">${x}</button>`;
+});
+document.getElementById("answers").innerHTML=html;
+}
+
+function answer(i){
+if(i===quiz[q].c) score+=10;
+q++;
+updateScore();
+if(q<quiz.length){loadQuiz()}
+else{createPuzzle();showScreen("puzzle")}
+}
+
+let next=1;
+function createPuzzle(){
+const nums=[1,2,3,4].sort(()=>Math.random()-0.5);
+const p=document.getElementById("pieces");
+p.innerHTML="";
+nums.forEach(n=>{
+p.innerHTML+=`<button class="piece" onclick="clickPiece(${n},this)">${n}</button>`;
+});
+}
+
+function clickPiece(n,btn){
+if(n===next){
+btn.disabled=true;
+next++;
+if(next===5){
+score+=15; updateScore();
+document.getElementById("puzzleMsg").innerText="✅ Puzzle selesai!";
+setTimeout(()=>{showScreen("match");loadMatch();},1000);
+}
+}else{
+document.getElementById("puzzleMsg").innerText="❌ Urutan salah.";
+}
+}
+
+const pairs={Miya:"Marksman",Franco:"Tank",Ling:"Assassin"};
+let selected=null,done=0;
+
+function loadMatch(){
+const g=document.getElementById("matchGrid");
+g.innerHTML="";
+Object.keys(pairs).forEach(h=>{
+g.innerHTML+=`<button class="match-item heroBtn" onclick="pickHero(this,'${h}')">${h}</button>`;
+});
+Object.values(pairs).forEach(r=>{
+g.innerHTML+=`<button class="match-item" onclick="checkRole('${r}')">${r}</button>`;
+});
+}
+
+function pickHero(el,h){
+document.querySelectorAll(".heroBtn").forEach(b=>b.classList.remove("selected"));
+el.classList.add("selected");
+selected=h;
+}
+
+function checkRole(role){
+if(selected && pairs[selected]===role){
+done++;
+selected=null;
+document.querySelectorAll(".heroBtn").forEach(b=>b.classList.remove("selected"));
+if(done===3){
+score+=15;
+finish();
+}
+}else{
+document.getElementById("matchMsg").innerText="❌ Pasangan tidak sesuai.";
+selected=null;
+document.querySelectorAll(".heroBtn").forEach(b=>b.classList.remove("selected"));
+}
+}
+
+function finish(){
+updateScore();
+document.getElementById("finalScore").innerText=`Skor Akhir: ${score}/50`;
+let rank="🔥 Terus Berlatih";
+if(score>=40) rank="⭐ Mythic";
+else if(score>=25) rank="🛡️ Epic";
+document.getElementById("rank").innerText=rank;
+showScreen("end");
+}
+</script>
+</body>
+</html>
